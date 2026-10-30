@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Test / coverage
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+junit.xml
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.venv/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+
+# NOTE: samples/ is intentionally NOT ignored - users must be able to run
+# the tool against the bundled sample projects.

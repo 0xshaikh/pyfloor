@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pyfloor &mdash; Audit the Python version floor of your project</title>
+<meta name="description" content="pyfloor audits the Python version floor of a project before it silently breaks in CI. Multi-manifest scan, CI floor coverage, code feature floor, JSON output, CI gate, zero dependencies.">
+<meta name="theme-color" content="#0d1117">
+<meta property="og:title" content="pyfloor &mdash; Python version floor auditor">
+<meta property="og:description" content="Audit the Python version floor of your project before it silently breaks in CI.">
+<meta property="og:image" content="https://raw.githubusercontent.com/0xshaikh/pyfloor/main/assets/og-image.png">
+<meta property="og:url" content="https://0xshaikh.github.io/pyfloor/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="pyfloor">
+<link rel="icon" href="https://raw.githubusercontent.com/0xshaikh/pyfloor/main/assets/favicon.ico">
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --cyan: #00d4ff;
+    --cyan-dim: #39d0d8;
+    --green: #3fb950;
+    --red: #f85149;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero { padding: 96px 0 64px; text-align: center; }
+  .badge-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+  .badge {
+    font-family: var(--mono); font-size: 13px; padding: 6px 14px;
+    border: 1px solid var(--border); border-radius: 999px; color: var(--muted);
+    background: var(--panel);
+  }
+  .badge b { color: var(--text); font-weight: 600; }
+  h1 {
+    font-size: clamp(44px, 8vw, 76px); font-weight: 800; letter-spacing: -1.5px;
+    margin-bottom: 18px;
+  }
+  h1 .accent { color: var(--cyan); }
+  .tagline { font-size: clamp(17px, 2.4vw, 22px); color: var(--muted); max-width: 620px; margin: 0 auto 36px; }
+  .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--mono); font-size: 15px; padding: 12px 22px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    transition: transform .12s ease, border-color .12s ease;
+  }
+  .btn:hover { transform: translateY(-2px); text-decoration: none; border-color: var(--cyan); }
+  .btn.primary { background: var(--cyan); color: #0d1117; border-color: var(--cyan); font-weight: 700; }
+
+  /* Screenshot */
+  .shot { padding: 24px 0 72px; }
+  .shot img {
+    width: 100%; border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  .shot .cap { text-align: center; color: var(--muted); font-size: 14px; margin-top: 14px; font-family: var(--mono); }
+
+  /* Sections */
+  section { padding: 64px 0; border-top: 1px solid var(--border); }
+  h2 {
+    font-size: 30px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px;
+  }
+  h2 .accent { color: var(--cyan); }
+  .lede { color: var(--muted); margin-bottom: 36px; max-width: 640px; }
+
+  /* Feature grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px;
+  }
+  .card h3 { font-size: 17px; margin-bottom: 8px; }
+  .card p { color: var(--muted); font-size: 14.5px; }
+  .card .k { font-family: var(--mono); color: var(--cyan); font-size: 13px; display: inline-block; margin-bottom: 10px; }
+
+  /* Code blocks */
+  .codebox {
+    background: #0d1117; border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px;
+    line-height: 1.55; color: var(--text); margin-bottom: 18px;
+  }
+  .codebox .p { color: var(--green); }
+  .codebox .c { color: var(--cyan); }
+  .codebox .r { color: var(--red); }
+  .codebox .g { color: var(--muted); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+
+  footer { padding: 48px 0 64px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; text-align: center; }
+  footer a { color: var(--cyan-dim); }
+  .mono { font-family: var(--mono); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="badge-row">
+      <span class="badge">Python <b>3.10+</b></span>
+      <span class="badge">License <b>MIT</b></span>
+      <span class="badge">Dependencies <b>zero</b></span>
+      <span class="badge">Stdlib <b>only</b></span>
+    </div>
+    <h1>py<span class="accent">floor</span></h1>
+    <p class="tagline">Audit the Python version floor of your project before it silently breaks in CI.</p>
+    <div class="cta">
+      <a class="btn primary" href="#install">Get started</a>
+      <a class="btn" href="#usage">Usage</a>
+      <a class="btn" href="https://github.com/0xshaikh/pyfloor">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<div class="shot">
+  <div class="wrap">
+    <img src="https://raw.githubusercontent.com/0xshaikh/pyfloor/main/assets/terminal.png"
+         alt="pyfloor check samples/broken output showing DECL_MISMATCH, FLOOR_NOT_TESTED and CODE_NEEDS_NEWER findings">
+    <div class="cap">$ pyfloor check samples/broken</div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <h2>What <span class="accent">pyfloor</span> checks</h2>
+    <p class="lede">One command, every place a Python version is declared, cross-checked for consistency, CI coverage, and source-level feature drift.</p>
+    <div class="grid">
+      <div class="card"><span class="k">collect</span><h3>Multi-manifest scan</h3><p>Reads the floor from pyproject.toml, setup.py/setup.cfg, .python-version, .tool-versions, tox.ini, noxfile, Pipfile, Dockerfiles and GitHub Actions workflows.</p></div>
+      <div class="card"><span class="k">FLOOR_NOT_TESTED</span><h3>CI floor coverage</h3><p>Verifies the declared floor actually appears in the CI matrix, so your oldest supported version is never silently dropped.</p></div>
+      <div class="card"><span class="k">CODE_NEEDS_NEWER</span><h3>Code feature floor</h3><p>Flags syntax and stdlib API usage &mdash; match, tomllib, walrus, PEP 604 unions &mdash; that requires a newer Python than the floor.</p></div>
+      <div class="card"><span class="k">DECL_MISMATCH</span><h3>Declaration consistency</h3><p>Warns when different manifests declare conflicting floors, so one stale file can't quietly override the others.</p></div>
+      <div class="card"><span class="k">--json</span><h3>JSON output</h3><p>Machine-readable output for pre-commit hooks, dashboards, or your own CI reporting.</p></div>
+      <div class="card"><span class="k">exit code</span><h3>CI gate</h3><p>Non-zero exit on errors by default. <span class="mono">--no-fail</span> to report without blocking, <span class="mono">--strict</span> to treat warnings as failures.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Install <span class="accent">in seconds</span></h2>
+    <p class="lede">Zero dependencies, pure standard library, Python 3.10+. Runs anywhere Python runs.</p>
+    <div class="two">
+      <div class="codebox"><span class="p">$</span> pipx run pyfloor check .</div>
+      <div class="codebox"><span class="p">$</span> pip install pyfloor</div>
+    </div>
+  </div>
+</section>
+
+<section id="usage">
+  <div class="wrap">
+    <h2>Usage <span class="accent">and output</span></h2>
+    <p class="lede">Plain ASCII output &mdash; safe on any terminal, easy to grep, no box-drawing glyphs.</p>
+
+    <h3 style="margin:0 0 12px;font-size:18px;color:var(--muted)">Help</h3>
+    <div class="codebox"><span class="p">$</span> pyfloor --help
+usage: pyfloor [-h] {check,declarations,features,version} ...
+
+Audit the Python version floor of a project.
+
+positional arguments:
+  {check,declarations,features,version}
+                        subcommand
+    check               scan project and report findings
+    declarations        list version declaration sites
+    features            run only the code-feature check
+    version             print version
+
+options:
+  -h, --help            show this help message and exit</div>
+
+    <h3 style="margin:0 0 12px;font-size:18px;color:var(--muted)">A broken project (exit code 1)</h3>
+    <div class="codebox"><span class="p">$</span> pyfloor check samples/broken
+pyfloor audit: samples/broken
+Declared floor: 3.9
+Declaration sites: 3
+Findings: 4
+
+SOURCE           PATH                      FLOOR  RAW        CI
+---------------  ------------------------  -----  ---------  ---------
+pyproject.toml   pyproject.toml            3.9    &gt;=3.9
+.python-version  .python-version           3.9    3.9
+ci.yml           .github/workflows/ci.yml  3.11   3.11,3.12  3.11,3.12
+
+<span class="r">[FAIL] DECL_MISMATCH: conflicting declared Python floors: 3.9 (pyproject.toml, .python-version in 2); 3.11 (ci.yml in 1)</span>
+<span class="r">[FAIL] FLOOR_NOT_TESTED: declared floor 3.9 is not present in CI matrix (tested: 3.11, 3.12)</span>
+<span class="r">[FAIL] CODE_NEEDS_NEWER: match statement requires Python 3.10 but project floor is 3.9</span>
+<span class="r">[FAIL] CODE_NEEDS_NEWER: import tomllib requires Python 3.11 but project floor is 3.9</span></div>
+
+    <h3 style="margin:0 0 12px;font-size:18px;color:var(--muted)">A clean project (exit code 0)</h3>
+    <div class="codebox"><span class="p">$</span> pyfloor check samples/good
+pyfloor audit: samples/good
+Declared floor: 3.10
+Declaration sites: 2
+Findings: 0
+
+SOURCE          PATH                      FLOOR  RAW        CI
+--------------  ------------------------  -----  ---------  ---------
+pyproject.toml  pyproject.toml            3.10   &gt;=3.10
+ci.yml          .github/workflows/ci.yml  3.10   3.10,3.12  3.10,3.12</div>
+
+    <h3 style="margin:0 0 12px;font-size:18px;color:var(--muted)">Machine-readable</h3>
+    <div class="codebox"><span class="p">$</span> pyfloor check . --json</div>
+  </div>
+</section>
+
+<section id="subcommands">
+  <div class="wrap">
+    <h2>Subcommands <span class="accent">&amp; flags</span></h2>
+    <div class="grid">
+      <div class="card"><span class="k">check [path]</span><h3>Full audit</h3><p>Scans declarations, CI coverage and code features. <span class="mono">--json</span>, <span class="mono">--no-fail</span>, <span class="mono">--strict</span>.</p></div>
+      <div class="card"><span class="k">declarations [path]</span><h3>List sites</h3><p>Show every version declaration source with its floor, raw spec and CI versions.</p></div>
+      <div class="card"><span class="k">features [path]</span><h3>Code only</h3><p>Run just the code-feature floor check, without the manifest scan.</p></div>
+      <div class="card"><span class="k">version</span><h3>Print version</h3><p>Print the installed pyfloor version.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><a href="https://github.com/0xshaikh/pyfloor">github.com/0xshaikh/pyfloor</a> &middot; MIT License &middot; Zero dependencies</p>
+    <p style="margin-top:8px;font-size:13px">This is a static site. It collects nothing, tracks nothing, and sets no cookies.</p>
+  </div>
+</footer>
+
+</body>
+</html>
