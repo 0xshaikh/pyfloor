@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import ast
+import sys
+
+import pytest
 
 from pyfloor import features
 
@@ -17,6 +20,7 @@ def test_walrus_detected():
     assert any(h["feature"] == "walrus" and h["min_version"] == (3, 8) for h in hits)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="except* syntax requires Python 3.11+")
 def test_except_star_detected():
     hits = _detect("try:\n    pass\nexcept* ValueError:\n    pass\n")
     assert any(h["feature"] == "except_star" and h["min_version"] == (3, 11) for h in hits)
